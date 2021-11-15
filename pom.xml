@@ -4,12 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.wuchong</groupId>
+    <groupId>com.guren</groupId>
     <artifactId>flink-sql-submit</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
 
     <properties>
-        <flink.version>1.9.0</flink.version>
+        <flink.version>1.13.0</flink.version>
+        <scala.version>2.12</scala.version>
     </properties>
 
     <dependencies>
@@ -22,7 +23,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-table-planner-blink_2.11</artifactId>
+            <artifactId>flink-table-planner-blink_${scala.version}</artifactId>
             <version>${flink.version}</version>
             <scope>provided</scope>
         </dependency>
@@ -34,17 +35,10 @@
             <scope>provided</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-jdbc_2.11</artifactId>
-            <version>${flink.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
         <!-- CLI dependencies -->
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-clients_2.11</artifactId>
+            <artifactId>flink-clients_${scala.version}</artifactId>
             <version>${flink.version}</version>
             <scope>provided</scope>
         </dependency>
@@ -58,8 +52,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.0</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>8</source>
+                    <target>8</target>
                     <!-- The semantics of this option are reversed, see MCOMPILER-209. -->
                     <useIncrementalCompilation>false</useIncrementalCompilation>
                     <compilerArgs>
@@ -83,7 +77,7 @@
                             <finalName>flink-sql-submit</finalName>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.github.wuchong.sqlsubmit.SqlSubmit</mainClass>
+                                    <mainClass>com.guren.sqlsubmit.SqlSubmit</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
