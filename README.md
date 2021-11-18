@@ -2,7 +2,8 @@
 该项目改自 [flink-sql-submit](https://github.com/wuchong/flink-sql-submit)
 Flink版本:1.14.0
 
-功能
+变动：
+- 区分SQL类型从正则改为calcite的SqlParser
 - 默认所有的插入语句在一组StatementSet中执行
 - 支持set语句和udf
 - 支持yarn-per-job模式
