@@ -1,4 +1,4 @@
-SET `execution.checkpointing.interval` = 180000;
+SET 'execution.checkpointing.interval' = 180000;
 create function splitFunction as 'com.guren.sqlsubmit.function.SplitFunction';
 CREATE TABLE user_log (
     user_id String,

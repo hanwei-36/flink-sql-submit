@@ -22,10 +22,15 @@ import com.guren.sqlsubmit.cli.CliOptions;
 import com.guren.sqlsubmit.cli.CliOptionsParser;
 import com.guren.sqlsubmit.cli.SqlCommandParser;
 import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlSetOption;
 import org.apache.calcite.util.NlsString;
+import org.apache.commons.io.IOUtils;
 import org.apache.flink.api.java.utils.ParameterTool;
+import org.apache.flink.core.fs.Path;
 import org.apache.flink.sql.parser.ddl.SqlCreateFunction;
+import org.apache.flink.sql.parser.ddl.SqlCreateTable;
+import org.apache.flink.sql.parser.ddl.SqlCreateView;
+import org.apache.flink.sql.parser.ddl.SqlSet;
+import org.apache.flink.sql.parser.dml.RichSqlInsert;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.SqlParserException;
@@ -34,11 +39,11 @@ import org.apache.flink.table.api.TableEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.table.functions.UserDefinedFunction;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class SqlSubmit {
 
@@ -68,7 +73,8 @@ public class SqlSubmit {
         bsEnv.getConfig().setGlobalJobParameters(parameterTool);
         this.tEnv = StreamTableEnvironment.create(bsEnv, bsSettings);
         this.statementSet = tEnv.createStatementSet();
-        String sql = Files.lines(Paths.get(workSpace + "/" + sqlFilePath), StandardCharsets.UTF_8).collect(Collectors.joining("\n"));
+        String sql = readSQL(workSpace + "/" + sqlFilePath);
+        System.out.println("the whole sql:");
         System.out.println(sql);
         List<SqlNode> calls = SqlCommandParser.parse(sql);
         for (SqlNode call : calls) {
@@ -81,21 +87,17 @@ public class SqlSubmit {
     // --------------------------------------------------------------------------------------------
 
     private void callCommand(SqlNode call) {
-        switch (call.getKind()) {
-            case SET_OPTION:
-                callSet((SqlSetOption) call);
-                break;
-            case CREATE_TABLE:
-                callCreateTable(call.toString());
-                break;
-            case INSERT:
-                callInsertInto(call.toString());
-                break;
-            case CREATE_FUNCTION:
-                callCreateFunction((SqlCreateFunction) call);
-                break;
-            default:
-                throw new RuntimeException("Unsupported command: " + call.toString());
+        System.out.println("current sql : " + call.toString());
+        if (call instanceof SqlSet) {
+            callSet((SqlSet) call);
+        } else if (call instanceof SqlCreateTable || call instanceof SqlCreateView) {
+            callCreateTable(call.toString());
+        } else if (call instanceof SqlCreateFunction) {
+            callCreateFunction((SqlCreateFunction) call);
+        } else if (call instanceof RichSqlInsert) {
+            callInsertInto(call.toString());
+        } else {
+            throw new RuntimeException("Unsupported command: " + call.toString());
         }
     }
 
@@ -110,9 +112,9 @@ public class SqlSubmit {
         }
     }
 
-    private void callSet(SqlSetOption cal) {
-        String key = cal.getName().toString();
-        String value = cal.getValue().toString();
+    private void callSet(SqlSet cal) {
+        String key = cal.getKeyString();
+        String value = cal.getValueString();
         tEnv.getConfig().getConfiguration().setString(key, value);
         // 方便自定义函数获取参数
         tEnv.getConfig().addJobParameter(key, value);
@@ -131,6 +133,18 @@ public class SqlSubmit {
             statementSet.addInsertSql(cmdCall);
         } catch (SqlParserException e) {
             throw new RuntimeException("SQL parse failed:\n" + cmdCall + "\n", e);
+        }
+    }
+
+    private String readSQL(String url) throws Exception {
+        try {
+            URL file = Path.fromLocalFile(new File(url).getAbsoluteFile())
+                    .toUri()
+                    .toURL();
+            return IOUtils.toString(file, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new Exception(
+                    String.format("Fail to read content from the %s.", url), e);
         }
     }
 }

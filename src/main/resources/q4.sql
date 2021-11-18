@@ -1,5 +1,5 @@
 create function OrderedSplitFunction as 'com.guren.sqlsubmit.function.OrderedSplitFunction';
-SET  `OrderedSplitFunction.order`=`desc`;
+SET 'OrderedSplitFunction.order'='desc';
 CREATE TABLE user_log
 (
     user_id   String,

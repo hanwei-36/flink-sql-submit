@@ -18,10 +18,11 @@
 ################################################################################
 
 source "$(dirname "$0")"/env.sh
+export HADOOP_CLASSPATH=`hadoop classpath`
 
-PROJECT_DIR=`pwd`
 $FLINK_DIR/bin/flink run -d \
 -t yarn-per-job \
--p 2 \
+-p 1 \
+-ynm $1 \
 target/flink-sql-submit.jar \
--w "${PROJECT_DIR}"/src/main/resources/ -f "$1".sql
+-w "${SQL_DIR}" -f "$1".sql

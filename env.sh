@@ -18,3 +18,4 @@
 ################################################################################
 
 FLINK_DIR=/Users/hanwei/bigdata/flink
+SQL_DIR=/Users/hanwei/code/flink-sql-submit/src/main/resources
