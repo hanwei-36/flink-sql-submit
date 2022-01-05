@@ -12,7 +12,10 @@ import org.apache.flink.types.Row;
 @FunctionHint(output = @DataTypeHint("ROW<word STRING, length INT>"))
 public class SplitFunction extends TableFunction<Row> {
 
-    public void eval(String str, String regex) {
+    public void eval(String str, String regex) throws Exception {
+        if(regex.equals("err")){
+            throw new Exception();
+        }
         for (String s : str.split(regex)) {
             collect(Row.of(s, s.length()));
         }

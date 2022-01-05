@@ -11,7 +11,7 @@ CREATE TABLE user_log
       'properties.group.id' = 'testGroup',
       'scan.startup.mode' = 'earliest-offset',
       'format' = 'csv'
-      );
+);
 
 CREATE TABLE sink_print
 (

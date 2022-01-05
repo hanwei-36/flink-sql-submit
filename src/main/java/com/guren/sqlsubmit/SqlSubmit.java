@@ -24,6 +24,7 @@ import com.guren.sqlsubmit.cli.SqlCommandParser;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.util.NlsString;
 import org.apache.commons.io.IOUtils;
+import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.sql.parser.ddl.SqlCreateFunction;
@@ -32,10 +33,10 @@ import org.apache.flink.sql.parser.ddl.SqlCreateView;
 import org.apache.flink.sql.parser.ddl.SqlSet;
 import org.apache.flink.sql.parser.dml.RichSqlInsert;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.SqlParserException;
 import org.apache.flink.table.api.StatementSet;
 import org.apache.flink.table.api.TableEnvironment;
+import org.apache.flink.table.api.TableResult;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.table.functions.UserDefinedFunction;
 
@@ -44,6 +45,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+
+import static org.apache.flink.configuration.ExecutionOptions.RUNTIME_MODE;
 
 public class SqlSubmit {
 
@@ -62,16 +65,16 @@ public class SqlSubmit {
 
     private SqlSubmit(String[] args) {
         final CliOptions options = CliOptionsParser.parseClient(args);
-        this.parameterTool = ParameterTool.fromArgs(args);
+        this.parameterTool = ParameterTool.fromArgs(args).mergeWith(ParameterTool.fromSystemProperties());
         this.sqlFilePath = options.getSqlFilePath();
         this.workSpace = options.getWorkingSpace();
     }
 
     private void run() throws Exception {
+        System.out.println("==============begin==============");
         StreamExecutionEnvironment bsEnv = StreamExecutionEnvironment.getExecutionEnvironment();
-        EnvironmentSettings bsSettings = EnvironmentSettings.newInstance().useBlinkPlanner().inStreamingMode().build();
         bsEnv.getConfig().setGlobalJobParameters(parameterTool);
-        this.tEnv = StreamTableEnvironment.create(bsEnv, bsSettings);
+        this.tEnv = StreamTableEnvironment.create(bsEnv);
         this.statementSet = tEnv.createStatementSet();
         String sql = readSQL(workSpace + "/" + sqlFilePath);
         System.out.println("the whole sql:");
@@ -80,8 +83,13 @@ public class SqlSubmit {
         for (SqlNode call : calls) {
             callCommand(call);
         }
-        System.out.println(tEnv.getConfig().getConfiguration());
-        this.statementSet.execute();
+        TableResult execute = this.statementSet.execute();
+
+        if (tEnv.getConfig().getConfiguration().get(RUNTIME_MODE).equals(RuntimeExecutionMode.BATCH)) {
+            execute.await();
+        }
+
+        System.out.println("==============end==============");
     }
 
     // --------------------------------------------------------------------------------------------

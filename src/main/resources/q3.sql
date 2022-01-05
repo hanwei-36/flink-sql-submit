@@ -1,4 +1,4 @@
-SET 'execution.checkpointing.interval' = 180000;
+SET 'execution.checkpointing.interval' = '180000';
 create function splitFunction as 'com.guren.sqlsubmit.function.SplitFunction';
 CREATE TABLE user_log (
     user_id String,
@@ -7,7 +7,7 @@ CREATE TABLE user_log (
     'connector' = 'kafka',
     'topic' = 'user_log',
     'properties.bootstrap.servers' = 'localhost:9092',
-    'properties.group.id' = 'testGroup',
+    --'properties.group.id' = 'testGroup',
     'scan.startup.mode' = 'earliest-offset',
     'format' = 'csv'
 );

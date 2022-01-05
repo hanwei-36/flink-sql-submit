@@ -13,7 +13,16 @@ Flink版本:1.14.0
 1. Set your Flink install path and SQL_DIR in `env.sh`
 2. Add your SQL scripts under `SQL_DIR` with `.sql` suffix, e.g, `q1.sql`
 3. Start all the service your job needed, including Flink, Kafka, and DataBases.
-3. Run your SQL via `./run.sh <sql-file-name>`, e.g. `./run.sh q1`
+3. Run your SQL via `./run.sh <sql-file-name>`, e.g. `./run.sh q1` or
+```
+flink run -d \
+-t yarn-per-job \
+-p 1 \
+-ynm q2 \
+-Dexecution.runtime-mode=BATCH \
+/Users/hanwei/code/flink-sql-submit/target/flink-sql-submit.jar \
+-w "/Users/hanwei/code/flink-sql-submit/src/main/resources" -f q3.sql
+```
 4. If the terminal returns the following output, it means the job is submitted successfully.
 
 ```
